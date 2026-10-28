@@ -1,0 +1,8 @@
+---
+// Dark-only theme. Replaces Starlight's light/dark/auto logic.
+---
+
+<script is:inline>
+	document.documentElement.dataset.theme = 'dark';
+	window.StarlightThemeProvider = { updatePickers() {} };
+</script>

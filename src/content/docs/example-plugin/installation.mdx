@@ -1,0 +1,62 @@
+---
+title: Installation
+description: Install and update Example Plugin.
+sidebar:
+  order: 2
+---
+
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+:::caution[Before you start]
+Requires **Java 21+** and **Paper 1.20.4 or newer**. Spigot is not supported.
+:::
+
+## Requirements
+
+| Requirement | Version | Required |
+|---|---|---|
+| Java | 21+ | Yes |
+| Paper / Purpur / Folia | 1.20.4+ | Yes |
+| PlaceholderAPI | Latest | Optional |
+| Vault | Latest | Optional |
+
+## Install
+
+<Steps>
+
+1. Download the latest jar from [BuiltByBit](https://builtbybit.com/creators/YOUR-PAGE).
+
+2. Stop your server and put `ExamplePlugin.jar` into `/plugins`.
+
+3. Start the server. Config files are generated automatically.
+
+4. Edit the config, then run `/example reload`.
+
+</Steps>
+
+## Database
+
+<Tabs>
+	<TabItem label="SQLite (default)">
+		Nothing to set up. Data is stored in `plugins/ExamplePlugin/data.db`.
+	</TabItem>
+	<TabItem label="MySQL / MariaDB">
+		```yaml title="config.yml"
+		database:
+		  type: mysql
+		  host: localhost
+		  port: 3306
+		  name: example
+		  user: root
+		  password: "change-me"
+		```
+	</TabItem>
+</Tabs>
+
+## Updating
+
+:::tip
+Back up `plugins/ExamplePlugin/` first. New options are added automatically and your values are kept.
+:::
+
+Replace the old jar and restart. Don't use `/reload` or PlugMan.
