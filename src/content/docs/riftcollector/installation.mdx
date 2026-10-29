@@ -1,0 +1,156 @@
+---
+title: Installation
+description: Install RiftCollector, pick a database, and connect the optional integrations.
+sidebar:
+  order: 2
+---
+
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+:::caution[Before you start]
+RiftCollector is built against **Paper 1.21.11** and needs **Java 21**. Spigot is not supported,
+because the plugin uses Paper's item, display and chat APIs.
+:::
+
+## Requirements
+
+| Requirement | Version | Required | Used for |
+|---|---|---|---|
+| Paper (or a fork of it) | 1.21.11 | Yes | — |
+| Java | 21+ | Yes | — |
+| Vault + an economy plugin | Latest | Optional | Buying upgrades, paying out auto sell |
+| ShopGUI+ | Latest | Optional | Sell prices |
+| EconomyShopGUI or EconomyShopGUI+ | Latest | Optional | Sell prices |
+
+Everything optional degrades quietly. Without Vault, upgrades and selling are simply unavailable
+and the plugin says so in the console once, on startup.
+
+## Install
+
+<Steps>
+
+1. Stop the server and put `RiftCollector.jar` into `/plugins`.
+
+2. Start the server. On first run it writes `config.yml`, `prices.yml`, `lang/en_US.yml` and the
+   five menu files in `gui/`, then creates its database.
+
+   :::note
+   The database drivers and the connection pool are downloaded on first start, straight from
+   Maven Central, so the jar stays small. The server needs outbound internet access the first
+   time it loads the plugin.
+   :::
+
+3. Give yourself a collector with `/collector` and place it.
+
+4. Edit the configuration, then apply it with `/collector reload`.
+
+</Steps>
+
+## Database
+
+Collectors, their contents, upgrades, settings, filters and trusted players all live in the
+database, not in the world files.
+
+<Tabs>
+	<TabItem label="SQLite (default)">
+		Nothing to set up. Everything is kept in `plugins/RiftCollector/data.db`.
+
+		```yaml title="config.yml"
+		storage:
+		  type: SQLITE
+		```
+	</TabItem>
+	<TabItem label="MySQL / MariaDB">
+		Use this to share collectors across a network, or to keep data outside the server folder.
+
+		```yaml title="config.yml"
+		storage:
+		  type: MYSQL
+		  mysql:
+		    host: localhost
+		    port: 3306
+		    database: riftcollector
+		    username: root
+		    password: "change-me"
+		    pool-size: 6
+		    use-ssl: false
+		```
+
+		:::caution
+		Database settings are read once at startup. Changing them needs a full server restart;
+		`/collector reload` will tell you so rather than half-applying them.
+		:::
+	</TabItem>
+</Tabs>
+
+Changed collectors are written back on a timer, on shutdown, and whenever something important
+happens like a placement or a purchase.
+
+```yaml title="config.yml"
+storage:
+  # How often changed collectors are written to the database, in seconds.
+  save-interval-seconds: 300
+```
+
+## Optional integrations
+
+### Vault
+
+Install Vault together with an economy plugin. RiftCollector uses it for two things: charging for
+upgrades, and paying a collector's owner when it sells something. Payments work while the owner is
+offline.
+
+### Shop plugins
+
+Auto sell asks each price source in turn, in the order you set, and uses the first price it gets:
+
+```yaml title="config.yml"
+collection:
+  price-providers:
+    - CUSTOM             # prices.yml, shipped with the plugin
+    - SHOPGUI_PLUS       # ShopGUI+
+    - ECONOMY_SHOP_GUI   # EconomyShopGUI and EconomyShopGUI+
+```
+
+Anything not installed is skipped, so the list is safe to leave as it is. One hook covers both
+EconomyShopGUI and EconomyShopGUI+. Where a shop prices an item in several currencies, the Vault
+price is the one used, because that is what the payout goes through.
+
+:::tip[No shop plugin?]
+`prices.yml` ships with sensible prices for common drops, so auto sell works on a server with
+nothing but Vault installed. See [Abilities](../abilities/#auto-sell).
+:::
+
+## Updating
+
+<Steps>
+
+1. Back up `plugins/RiftCollector/`, or at least `data.db` if you are on SQLite.
+
+2. Replace the jar and restart the server. Do not use `/reload` or a plugin manager.
+
+3. On startup your config files are brought up to date: new settings are added with their
+   comments, your values are left alone, settings the plugin no longer uses are taken out, and
+   new menu buttons are placed into your menus. A timestamped `.backup-…` copy is written
+   whenever a file is changed.
+
+</Steps>
+
+Read [Configuration → Keeping configs up to date](../configuration/#keeping-configs-up-to-date)
+for exactly what the updater will and will not touch.
+
+## Update notifications
+
+Off until you point it at a project:
+
+```yaml title="config.yml"
+updates:
+  enabled: true
+  project: ""              # a Modrinth project slug or id
+  check-interval-hours: 6
+  notify-on-join: true
+  notify-permission: riftcollector.update-notify
+```
+
+The check runs off the main thread and only ever logs a line and tells joining players who hold
+the permission.

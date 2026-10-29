@@ -1,0 +1,23 @@
+---
+/**
+ * A screenshot with an optional caption.
+ *
+ * `src` is a path inside `public/`, written without a leading slash, for example
+ * `img/riftcollector/collector-menu.svg`. The site's base path is added here, so pages do
+ * not have to know about it and nothing breaks if the base changes.
+ */
+interface Props {
+	src: string;
+	alt: string;
+	caption?: string;
+}
+
+const { src, alt, caption } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const href = `${base}/${src.replace(/^\//, "")}`;
+---
+
+<figure class="bl-figure">
+	<img src={href} alt={alt} loading="lazy" decoding="async" />
+	{caption && <figcaption>{caption}</figcaption>}
+</figure>

@@ -51,11 +51,11 @@ export default defineConfig({
         },
       },
       // Each plugin = one sidebar group, filled automatically from its folder.
-      // New plugin? Copy src/content/docs/example-plugin, rename it, add a group here.
+      // New plugin? Add a folder under src/content/docs and a group here.
       sidebar: [
         {
-          label: "Example Plugin",
-          items: [{ autogenerate: { directory: "example-plugin" } }],
+          label: "RiftCollector",
+          items: [{ autogenerate: { directory: "riftcollector" } }],
         },
       ],
       lastUpdated: false,

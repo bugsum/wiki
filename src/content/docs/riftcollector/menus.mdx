@@ -1,0 +1,270 @@
+---
+title: Menus
+description: The five collector menus, and how to rearrange them in gui/.
+sidebar:
+  order: 3
+---
+
+import { Tabs, TabItem, Badge } from '@astrojs/starlight/components';
+import Figure from '../../../components/Figure.astro';
+
+Every menu is a file in `plugins/RiftCollector/gui/`. They all share the same format: a grid of
+characters that says where things go, and a list of items that says what each character is. Nothing
+is hardcoded, so you can move buttons, swap icons or strip a menu back to the parts you want.
+
+## The collector menu
+
+<Figure
+	src="img/riftcollector/collector-menu.svg"
+	alt="The collector menu with stored items and the bottom row of category buttons"
+	caption="gui/collector.yml"
+/>
+
+The content slots are a drawing of the collector's storage, not real inventory slots: a slot can
+hold more than Minecraft can show in one stack, so the item is drawn with its real count in the
+lore and every click is handled by the plugin.
+
+### Taking items out
+
+| Click | Does | Setting |
+|---|---|---|
+| Left | Takes one stack, so 64 of most things | `take-stack` |
+| Right | Takes a single item | `take-one` |
+| Shift + left | Fills your inventory with as much as fits | `fill-inventory` |
+
+```yaml title="gui/collector.yml"
+content-clicks:
+  left: take-stack
+  right: take-one
+  shift-left: fill-inventory
+```
+
+Any click name works on the left: `left`, `right`, `shift-left`, `shift-right`, `middle`,
+`number-key`, `drop`, `control-drop`, `swap-offhand`. Set one to `none` to turn it off.
+
+:::note[Nothing is lost]
+If what you take does not fit in your inventory, it goes back into the collector instead of onto
+the floor. Taking the last item out of a slot pulls the remaining slots down, so the storage
+never has gaps in it.
+:::
+
+### Putting items in
+
+Shift click an item in your own inventory, or click a slot while holding items on the cursor.
+Both respect the collector's filter and how much a slot can hold.
+
+### Locked slots
+
+A collector starts with fewer slots than a page shows. The slots it has not unlocked yet are
+drawn with the locked item, so it is clear there is more to buy rather than looking like a bug:
+
+```yaml title="gui/collector.yml"
+locked-slot-icon: "X"
+```
+
+Remove that line to leave locked slots empty instead. Pages past the collector's capacity do not
+exist at all.
+
+### The bottom row
+
+| Button | Opens |
+|---|---|
+| Upgrades | [Upgrades menu](#upgrades) |
+| Settings | [Settings menu](#settings) |
+| Filter | [Filter menu](#filter) |
+| Trusted players | [Trust menu](#trusted-players) |
+| Sell contents | Sells everything priced, right there |
+| Pick up collector | Returns the collector to your inventory |
+
+Sell and pick-up are covered in [Abilities](../abilities/).
+
+## Upgrades
+
+<Figure
+	src="img/riftcollector/upgrades-menu.svg"
+	alt="The upgrades menu with one icon per upgrade"
+	caption="gui/upgrades.yml"
+/>
+
+One icon per upgrade. Which slot each sits in, and which icon to use when it is maxed out or not
+allowed, comes from the file:
+
+```yaml title="gui/upgrades.yml"
+upgrades:
+  pickup-speed:
+    slot: 11
+    icon: A           # while it can still be bought
+    maxed-icon: AM    # once it is at its last level
+    locked-icon: L    # when the player may not buy it
+```
+
+See [Upgrades](../upgrades/) for what each one does and how the storage upgrade's three clicks
+work.
+
+## Settings
+
+<Figure
+	src="img/riftcollector/settings-menu.svg"
+	alt="The settings menu with auto sell, auto smelt and hologram toggles"
+	caption="gui/settings.yml"
+/>
+
+A toggle per ability, each with its own icon for on, off and not-allowed:
+
+```yaml title="gui/settings.yml"
+settings:
+  auto-sell:
+    slot: 11
+    enabled-icon: SE
+    disabled-icon: SD
+    locked-icon: L
+```
+
+When a toggle cannot be used, the item says why on its own lore — no permission, not trusted, or
+no economy and price source available — instead of simply doing nothing.
+
+## Filter
+
+<Figure
+	src="img/riftcollector/filter-menu.svg"
+	alt="The filter menu listing filtered items with a mode button"
+	caption="gui/filter.yml"
+/>
+
+The content slots list the filtered items. Shift click an item in your inventory to add it, click
+one in the list to take it off, and click the mode item to cycle between off, whitelist and
+blacklist. The mode slot is drawn by the plugin, so it is left blank in the grid:
+
+```yaml title="gui/filter.yml"
+mode:
+  slot: 49
+  disabled-icon: MO
+  whitelist-icon: MW
+  blacklist-icon: MB
+```
+
+## Trusted players
+
+<Figure
+	src="img/riftcollector/trust-menu.svg"
+	alt="The trusted players menu showing player heads"
+	caption="gui/trust.yml"
+/>
+
+One head per trusted player, filled in with their skin. Clicking a head removes that player, and
+the add button asks for a name in chat. Only the owner and staff can open this menu.
+
+```yaml title="gui/trust.yml"
+list:
+  icon: "H"     # the item drawn for each trusted player
+```
+
+## Writing a menu file
+
+<Tabs>
+	<TabItem label="Layout">
+		One line per row, nine characters each, up to six rows.
+
+		```yaml title="gui/collector.yml"
+		rows: 6
+		content-character: "#"
+		layout:
+		  - "DDDDDDDDD"
+		  - "D#######D"
+		  - "D#######D"
+		  - "D#######D"
+		  - "D#######D"
+		  - "USF<I>TVP"
+		```
+
+		- `#` is a content slot: stored items, filtered items or trusted players go here.
+		- A space leaves the slot empty.
+		- Every other character needs an entry under `items`.
+	</TabItem>
+	<TabItem label="Items">
+		```yaml title="gui/collector.yml"
+		items:
+		  D:
+		    material: GRAY_STAINED_GLASS_PANE
+		    hide-tooltip: true
+		  V:
+		    material: EMERALD
+		    name: "<lang:gui.collector.sell.name>"
+		    lore:
+		      - "<lang:gui.collector.sell.lore-1>"
+		      - ""
+		      - "<yellow>Worth now: <white><value>"
+		    action: sell-all
+		```
+
+		| Option | Does |
+		|---|---|
+		| `material` | Any item material. Required. |
+		| `amount` | Stack size shown on the icon. Default `1`. |
+		| `name` | Display name. Leave it out to keep the item's own name. |
+		| `lore` | List of lore lines. |
+		| `hide-tooltip` | `true` hides the tooltip completely, for borders and fillers. |
+		| `glow` | `true` adds the enchantment glint. |
+		| `item-model` | A resource pack item model, such as `myserver:collector_next`. |
+		| `action` | What a click does. See below. |
+		| `show-if` | When the item is shown. See below. |
+		| `fallback` | Character of the item to draw instead when `show-if` fails. |
+	</TabItem>
+	<TabItem label="Actions">
+		| Action | Does |
+		|---|---|
+		| `none` | Nothing. The default. |
+		| `next-page` / `previous-page` | Turns the page. |
+		| `close` | Closes the menu. |
+		| `back` | Returns to the collector menu. |
+		| `open-upgrades` / `open-settings` / `open-filter` / `open-trust` | Opens that menu. |
+		| `sell-all` | Sells everything in the collector that has a price. |
+		| `pickup` | Picks the collector up, if it is empty. |
+		| `trust-add` | Asks for a player name in chat. |
+	</TabItem>
+	<TabItem label="Conditions">
+		`show-if` hides an item until it is worth showing. Put `!` in front to invert it.
+
+		| Condition | True when |
+		|---|---|
+		| `always` | Always. The default. |
+		| `has-next-page` / `has-previous-page` | There is a page that way. |
+		| `has-items` / `is-empty` | The collector has anything stored, or nothing. |
+		| `is-full` | Every slot is used. |
+
+		With `fallback` you can swap in another item rather than leaving a hole, which is how the
+		shipped pagers turn back into border glass on the first and last page:
+
+		```yaml title="gui/collector.yml"
+		'>':
+		  material: ARROW
+		  name: "<lang:gui.collector.next-page.name>"
+		  action: next-page
+		  show-if: has-next-page
+		  fallback: D
+		```
+	</TabItem>
+	<TabItem label="Placeholders">
+		Usable in a menu's `title`, and in any `name` or `lore`.
+
+		| Placeholder | Is |
+		|---|---|
+		| `<page>` `<pages>` | Current page, and how many there are |
+		| `<next-page>` `<previous-page>` | The page a pager would go to |
+		| `<stored>` `<capacity>` `<free>` | Slots used, available and left |
+		| `<items>` | Items stored, with thousands separators |
+		| `<value>` | What the contents would sell for |
+		| `<earnings>` `<sold>` | Money made and items sold so far |
+		| `<owner>` `<trusted>` | The owner's name, and how many players are trusted |
+		| `<amount>` `<stack-cap>` | On a stored stack: its real count and the slot limit |
+
+		The upgrade and setting icons get a few more of their own, listed in
+		[Upgrades](../upgrades/) and [Abilities](../abilities/).
+	</TabItem>
+</Tabs>
+
+:::tip[Text belongs in lang/]
+The shipped menus point at the language file with `<lang:some.key>` rather than writing text
+inline. That keeps one copy of every string and makes a menu translatable without touching the
+layout. Inline text works too, if you would rather keep a one-off line next to the item.
+:::

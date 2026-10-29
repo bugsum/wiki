@@ -1,0 +1,182 @@
+---
+title: Upgrades
+description: Pickup speed, pickup range, storage slots and slot capacity, and how to price them.
+sidebar:
+  order: 4
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Upgrades belong to the collector, not to the player, and are bought from the collector's own
+Upgrades menu with money through Vault. A collector carries its upgrades with it: pick it up and
+place it again and nothing is lost.
+
+:::note
+Without Vault and an economy plugin, upgrade icons say so on their lore and cannot be bought.
+Levels that cost `0` still apply, so a server with no economy simply uses whatever level 0 gives.
+:::
+
+## The four upgrades
+
+| Upgrade | Raises | Permission |
+|---|---|---|
+| Pickup Speed | How often the collector sweeps | `riftcollector.upgrade.pickup-speed` |
+| Pickup Range | How far around itself it sweeps | `riftcollector.upgrade.pickup-range` |
+| Storage Slots | How many slots it can use | `riftcollector.upgrade.slots` |
+| Slot Capacity | How many items fit in one slot | `riftcollector.upgrade.slot-capacity` |
+
+Three of them are plain level lists. Storage is different, because it is bought as you go.
+
+## Pickup speed
+
+The value is the gap between sweeps in ticks, so a lower number is faster. 20 ticks is one second.
+
+```yaml title="config.yml"
+upgrades:
+  pickup-speed:
+    levels:
+      - { value: 40, cost: 0 }
+      - { value: 20, cost: 25000 }
+      - { value: 10, cost: 100000 }
+      - { value: 5, cost: 400000 }
+```
+
+Each collector keeps its own schedule, so a fast collector does not make every other collector on
+the server run more often.
+
+## Pickup range
+
+How range is measured is a server-wide choice:
+
+```yaml title="config.yml"
+collection:
+  # CHUNK  - count chunks around the collector's own chunk
+  # RADIUS - count blocks, ignoring chunk borders
+  range-type: CHUNK
+```
+
+Because the two modes are measured in different units, each level carries a number for both. The
+mode decides which one is read, and the other is ignored:
+
+```yaml title="config.yml"
+upgrades:
+  pickup-range:
+    levels:
+      - { value: 0, radius: 12, cost: 0 }        # own chunk  /  12 blocks
+      - { value: 1, radius: 24, cost: 50000 }    # 3x3 chunks /  24 blocks
+      - { value: 2, radius: 48, cost: 250000 }   # 5x5 chunks /  48 blocks
+```
+
+In `CHUNK` mode, `value: 0` means the collector's own chunk only, `1` means the eight chunks
+around it as well, and so on. Chunks that are not loaded are skipped.
+
+:::caution[Range costs performance]
+A large range means more entities to look through on every sweep. `CHUNK` with `value: 2` is
+twenty-five chunks of entities, every time that collector ticks. Raise the price, not just the
+range.
+:::
+
+## Storage slots
+
+Storage is sold as you go rather than as fixed levels, and how it is sold is up to you:
+
+<Tabs>
+	<TabItem label="SLOT mode">
+		Players buy single slots, a bulk amount, or a whole page at a time. A page that is only
+		partly paid for shows the locked item in the slots that are not unlocked yet.
+
+		```yaml title="config.yml"
+		upgrades:
+		  slots:
+		    mode: SLOT
+		    slot:
+		      start: 7            # what a new collector has
+		      max: 84             # the most it can ever have
+		      cost-per-slot: 2500
+		      bulk: 7             # what a right click buys
+		```
+
+		| Click | Buys |
+		|---|---|
+		| Left | One slot |
+		| Right | The `bulk` amount |
+		| Shift + left | A whole page |
+
+		A purchase that would go past `max` is trimmed to what is left, and charged only for
+		that.
+	</TabItem>
+	<TabItem label="PAGE mode">
+		Players buy one whole page at a time, so a page is either there or it is not, and there
+		are never locked slots sitting in a half-bought page. Any click buys a page.
+
+		```yaml title="config.yml"
+		upgrades:
+		  slots:
+		    mode: PAGE
+		    page:
+		      start: 1            # pages a new collector has
+		      max: 3
+		      cost-per-page: 60000
+		```
+	</TabItem>
+</Tabs>
+
+A page is however many content slots your `gui/collector.yml` has, 28 with the shipped layout.
+Change the layout and the page size follows it.
+
+## Slot capacity
+
+How many items one slot can hold. This is what makes a single slot able to hold a million of
+something:
+
+```yaml title="config.yml"
+upgrades:
+  slot-capacity:
+    levels:
+      - { value: 10000, cost: 0 }
+      - { value: 100000, cost: 75000 }
+      - { value: 1000000, cost: 500000 }
+```
+
+:::caution[Lowering it later]
+Items already stored are never destroyed. If you lower a capacity, anything that no longer fits
+stays in the database, out of reach, and a line in the console says which collector it belongs to.
+Raise the number again and it comes back.
+:::
+
+## Per-level permissions
+
+Any level can carry its own permission, on top of the upgrade's permission, to keep the top of a
+ladder for a rank:
+
+```yaml title="config.yml"
+upgrades:
+  pickup-speed:
+    levels:
+      - { value: 40, cost: 0 }
+      - { value: 20, cost: 25000 }
+      - { value: 5, cost: 400000, permission: "riftcollector.vip" }
+```
+
+A player without it sees the locked icon, which says on its lore that they do not have permission
+for it.
+
+## Menu placeholders
+
+Beyond the shared ones, upgrade icons can use:
+
+| Placeholder | Is |
+|---|---|
+| `<upgrade>` | The upgrade's display name from `lang/` |
+| `<level>` `<max-level>` | Current level and the highest one |
+| `<value>` `<next-value>` | What it does now, and after upgrading |
+| `<cost>` | What the next level costs |
+| `<reason>` | Why it cannot be bought, when it cannot |
+
+The storage upgrade adds a few, since it is priced per click:
+
+| Placeholder | Is |
+|---|---|
+| `<pages>` `<page-size>` | Pages unlocked, and slots per page |
+| `<bulk>` | How many slots a right click buys |
+| `<cost-one>` `<cost-bulk>` `<cost-page>` | The price of each of the three clicks |

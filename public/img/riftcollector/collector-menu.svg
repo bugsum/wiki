@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-label="Collector menu placeholder">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0v40" fill="none" stroke="#1f1f28" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="720" fill="#0a0a0d"/>
+  <rect width="1280" height="720" fill="url(#grid)"/>
+  <rect x="24" y="24" width="1232" height="672" fill="#111116" stroke="#2c2c38" stroke-width="2" rx="14"/>
+  <g font-family="Inter, 'Segoe UI', sans-serif" text-anchor="middle">
+    <text x="640" y="330" fill="#ededf2" font-size="44" font-weight="600">Collector menu</text>
+    <text x="640" y="382" fill="#6b6b78" font-size="24">Screenshot placeholder</text>
+    <text x="640" y="424" fill="#4a4a56" font-size="19">public/img/riftcollector/collector-menu.svg</text>
+  </g>
+</svg>

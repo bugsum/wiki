@@ -1,0 +1,195 @@
+---
+title: Abilities
+description: Auto sell, auto smelt, filters, selling by hand, picking collectors up, trust and holograms.
+sidebar:
+  order: 5
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import Figure from '../../../components/Figure.astro';
+
+Abilities are switches on a single collector, flipped from its Settings menu, and each one is
+gated by its own permission.
+
+## The pickup pipeline
+
+Everything a collector sweeps up goes through the same four steps, in this order:
+
+1. **Filter** — if the collector does not want the item, it is left on the ground.
+2. **Auto smelt** — the item becomes whatever a furnace would make of it.
+3. **Auto sell** — if it has a price, it is sold and the owner paid. It never reaches storage.
+4. **Storage** — whatever is left is stored, and anything that does not fit stays on the ground.
+
+## Auto sell
+
+Sells drops the moment they are picked up and pays the collector's owner, even while they are
+offline. Sold items never take up a slot, so a collector set to sell cobblestone will not fill up
+on it.
+
+Where prices come from, in order:
+
+```yaml title="config.yml"
+collection:
+  price-providers:
+    - CUSTOM             # prices.yml
+    - SHOPGUI_PLUS       # ShopGUI+
+    - ECONOMY_SHOP_GUI   # EconomyShopGUI and EconomyShopGUI+
+```
+
+The first source with a price for the item wins, and anything not installed is skipped.
+
+### Your own prices
+
+`prices.yml` needs no shop plugin at all. A price is **per single item**, so 64 of something sells
+for 64 times the number:
+
+```yaml title="prices.yml"
+prices:
+  COBBLESTONE: 0.05
+  IRON_INGOT: 4.0
+  DIAMOND: 50.0
+```
+
+Remove an item to let the next source decide, or set it to `0` to make it worthless.
+
+:::note[Payouts go through Vault]
+Whatever a shop plugin prices an item in, the payout is made with Vault. Where a shop item has
+several currencies, the Vault one is used.
+:::
+
+## Selling by hand
+
+The **Sell contents** button in the collector menu sells everything in it that has a price and
+pays the owner. Its lore shows what the contents are worth right now, so it is also a quick way
+to see the value of a full collector.
+
+Items nothing will buy are left exactly where they are. Needs `riftcollector.sell`.
+
+## Auto smelt
+
+Turns picked-up items into what a furnace would make of them: raw iron becomes an ingot, sand
+becomes glass. No fuel, no furnace.
+
+:::note[Only one-for-one recipes]
+A recipe that returns a different number of items than it takes is left alone and the item is
+stored raw. Every vanilla furnace recipe is one-for-one; this only comes up with custom recipes,
+and it keeps the counting of what was and was not picked up exact.
+:::
+
+## Filters
+
+<Figure
+	src="img/riftcollector/filter-menu.svg"
+	alt="The filter menu"
+	caption="Filtering is per collector"
+/>
+
+Three modes, cycled with the mode button:
+
+| Mode | Collects |
+|---|---|
+| Off | Everything |
+| Whitelist | Only the listed items |
+| Blacklist | Everything except the listed items |
+
+Shift click an item in your inventory to add it to the list, click one in the list to remove it.
+Filtered-out items are left on the ground untouched, so another collector or a player can still
+take them.
+
+A server-wide list exists as well, for things no collector should ever touch:
+
+```yaml title="config.yml"
+collection:
+  ignored-materials: [ ]
+```
+
+## Trusted players
+
+<Figure
+	src="img/riftcollector/trust-menu.svg"
+	alt="The trusted players menu"
+	caption="Trusted players, by name"
+/>
+
+A collector is private by default: only its owner and staff with `riftcollector.bypass` can open
+it. The owner can trust other players from the Trust menu.
+
+| Can | Owner | Trusted | Bypass |
+|---|---|---|---|
+| Open it, take and deposit items | Yes | Yes | Yes |
+| Buy upgrades, flip settings, edit the filter, sell | Yes | Yes | Yes |
+| Manage the trusted list | Yes | — | Yes |
+| Pick the collector up, or break it | Yes | — | Yes |
+
+Names are typed in chat rather than picked from a list, so a player who has never been on the
+server can be trusted too. The name is looked up in the server's own player cache first and only
+checked against Mojang if the server has never seen it. Type `cancel` to back out.
+
+## Holograms
+
+<Figure
+	src="img/riftcollector/hologram.svg"
+	alt="A hologram floating above a placed collector"
+	caption="Drawn with a vanilla text display"
+/>
+
+Floating text above every collector, using vanilla text displays, so there is no hologram plugin
+to install. Players can switch theirs off in Settings.
+
+```yaml title="config.yml"
+holograms:
+  enabled: true
+  offset-y: 1.4
+  update-interval-seconds: 5
+  lines:
+    - "<lang:hologram.owner>"
+    - "<lang:hologram.stored>"
+```
+
+Lines take `<owner>`, `<items>`, `<stored>`, `<capacity>`, `<earnings>` and `<sold>`. A third line
+showing earnings ships in the language file as `hologram.earnings`, ready to add to the list.
+
+### Styling
+
+The display entity is exposed, so a hologram can look however you want:
+
+```yaml title="config.yml"
+holograms:
+  style:
+    text-shadow: true
+    see-through: false
+    billboard: CENTER      # FIXED, VERTICAL, HORIZONTAL, CENTER
+    alignment: CENTER      # LEFT, RIGHT, CENTER
+    scale: 1.0
+    line-width: 200
+    text-opacity: -1       # 1-255, or -1 for fully opaque
+    background:
+      enabled: false
+      color: "#000000"
+      opacity: 64          # 0-255
+    brightness: -1         # 0-15 for a fixed light level, -1 to follow the block
+    view-range: 1.0
+```
+
+Styles are reapplied as holograms refresh, so `/collector reload` restyles the ones already in
+the world instead of needing them replaced.
+
+:::tip
+Holograms are never saved into the world. A crash cannot leave orphans behind, and they come back
+on their own when a chunk loads.
+:::
+
+## Picking a collector up
+
+The **Pick up collector** button returns the collector to your inventory with its upgrades and
+settings intact. Breaking the block does the same thing.
+
+Both need the collector to be **empty** — take the items out or sell them first. This is also why
+a hopper cannot drain a collector: it is not a container, so the only ways out are the menu and
+the sell button.
+
+:::note[Forced removal]
+If a collector is destroyed by something that cannot be refused, such as an explosion or a world
+edit, it drops as an item carrying its contents so nothing is lost. Placing that item restores
+what was inside.
+:::

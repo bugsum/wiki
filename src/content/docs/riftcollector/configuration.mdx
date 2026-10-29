@@ -1,0 +1,225 @@
+---
+title: Configuration
+description: Every file and setting RiftCollector generates, and how updates are merged.
+sidebar:
+  order: 7
+---
+
+import { FileTree, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Everything lives in `plugins/RiftCollector/`. Run `/collector reload` after editing, except for
+database settings, which need a restart.
+
+<FileTree>
+
+- plugins/RiftCollector/
+  - config.yml         everything below
+  - prices.yml         your own sell prices
+  - data.db            collectors, when using SQLite
+  - lang/
+    - en_US.yml        every line of text the plugin shows
+  - gui/
+    - collector.yml    the main menu
+    - upgrades.yml
+    - settings.yml
+    - filter.yml
+    - trust.yml
+  - .managed/          what the updater has written before. Leave it alone.
+
+</FileTree>
+
+## config.yml
+
+<Tabs>
+	<TabItem label="General">
+		```yaml title="config.yml"
+		# Language file to use from lang/, without the .yml
+		language: en_US
+
+		# The block a collector is placed as. Any placeable block works: collectors keep their
+		# own storage, so the block is only the skin.
+		item:
+		  material: HOPPER
+
+		limits:
+		  # How many collectors may be placed in one chunk.
+		  collectors-per-chunk: 1
+		```
+
+		| Option | Type | Default | Description |
+		|---|---|---|---|
+		| `language` | Text | `en_US` | Which file in `lang/` to load |
+		| `item.material` | Material | `HOPPER` | The block collectors are placed as |
+		| `limits.collectors-per-chunk` | Number | `1` | Collectors allowed per chunk |
+	</TabItem>
+	<TabItem label="Storage">
+		```yaml title="config.yml"
+		storage:
+		  type: SQLITE                   # SQLITE or MYSQL
+		  mysql:
+		    host: localhost
+		    port: 3306
+		    database: riftcollector
+		    username: root
+		    password: ""
+		    pool-size: 6
+		    use-ssl: false
+		  save-interval-seconds: 300
+		  import-legacy-chunk-data: true
+		```
+
+		| Option | Type | Default | Description |
+		|---|---|---|---|
+		| `storage.type` | `SQLITE` / `MYSQL` | `SQLITE` | Where collectors are kept |
+		| `storage.save-interval-seconds` | Number | `300` | How often changes are written |
+		| `storage.import-legacy-chunk-data` | Boolean | `true` | Imports collectors from versions that kept them in chunk data |
+
+		`import-legacy-chunk-data` only matters if you ran a build that stored collectors in the
+		world itself. It picks them up as their chunks load, so leave it on until every world
+		has been visited once, then turn it off.
+	</TabItem>
+	<TabItem label="Collection">
+		```yaml title="config.yml"
+		collection:
+		  # CHUNK  - the pickup range upgrade counts chunks
+		  # RADIUS - it counts blocks instead
+		  range-type: CHUNK
+		  # Item types no collector will ever pick up.
+		  ignored-materials: [ ]
+		  price-providers:
+		    - CUSTOM
+		    - SHOPGUI_PLUS
+		    - ECONOMY_SHOP_GUI
+		```
+
+		| Option | Type | Default | Description |
+		|---|---|---|---|
+		| `collection.range-type` | `CHUNK` / `RADIUS` | `CHUNK` | How pickup range is measured |
+		| `collection.ignored-materials` | List | `[]` | Items left on the ground server-wide |
+		| `collection.price-providers` | List | all three | Price sources, in the order they are asked |
+	</TabItem>
+	<TabItem label="Holograms">
+		```yaml title="config.yml"
+		holograms:
+		  enabled: true
+		  offset-y: 1.4
+		  update-interval-seconds: 5
+		  lines:
+		    - "<lang:hologram.owner>"
+		    - "<lang:hologram.stored>"
+		  style:
+		    text-shadow: true
+		    see-through: false
+		    billboard: CENTER
+		    alignment: CENTER
+		    scale: 1.0
+		    line-width: 200
+		    text-opacity: -1
+		    background:
+		      enabled: false
+		      color: "#000000"
+		      opacity: 64
+		    brightness: -1
+		    view-range: 1.0
+		```
+
+		Every option is explained in [Abilities → Holograms](../abilities/#holograms).
+	</TabItem>
+	<TabItem label="Updates">
+		```yaml title="config.yml"
+		updates:
+		  enabled: true
+		  project: ""
+		  check-interval-hours: 6
+		  notify-on-join: true
+		  notify-permission: riftcollector.update-notify
+		```
+
+		| Option | Type | Default | Description |
+		|---|---|---|---|
+		| `updates.enabled` | Boolean | `true` | Whether to check at all |
+		| `updates.project` | Text | empty | Modrinth project slug or id. Empty turns checking off |
+		| `updates.check-interval-hours` | Number | `6` | Hours between checks |
+		| `updates.notify-on-join` | Boolean | `true` | Tell players with the permission on join |
+	</TabItem>
+	<TabItem label="Upgrades">
+		Covered in full on the [Upgrades](../upgrades/) page, including the two storage modes.
+
+		```yaml title="config.yml"
+		upgrades:
+		  pickup-speed:
+		    levels:
+		      - { value: 40, cost: 0 }
+		      - { value: 20, cost: 25000 }
+		  pickup-range:
+		    levels:
+		      - { value: 0, radius: 12, cost: 0 }
+		  slots:
+		    mode: SLOT
+		    slot: { start: 7, max: 84, cost-per-slot: 2500, bulk: 7 }
+		    page: { start: 1, max: 3, cost-per-page: 60000 }
+		  slot-capacity:
+		    levels:
+		      - { value: 10000, cost: 0 }
+		```
+	</TabItem>
+</Tabs>
+
+## Text and translations
+
+Every message, item name and lore line is in `lang/`, so the plugin can be translated without
+touching anything else.
+
+```yaml title="lang/en_US.yml"
+prefix: "<gray>[</gray><gold>RiftCollector</gold><gray>]</gray> "
+
+collector:
+  placed: "<lang:prefix><green>Collector placed. It now collects items dropped in this chunk."
+  not-empty: "<lang:prefix><red>Empty or sell the contents before taking this collector."
+```
+
+Three things are worth knowing:
+
+- **All colour styles work, mixed freely.** MiniMessage (`<red>`, `<gradient:#8b7cff:#c6ff00>`),
+  legacy codes (`&c`, `&l`, `&r`) and legacy hex (`&#ff5555`) can all appear in the same line.
+- **`<lang:some.key>` inserts another message**, which is how every message reuses one `prefix`
+  and how the menus pull their text out of this file.
+- **Missing keys fall back to English.** A translation does not have to be complete to be usable;
+  anything you leave out comes from the shipped `en_US.yml`.
+
+To translate, copy `en_US.yml` to, say, `de_DE.yml`, translate what you want, and set
+`language: de_DE`.
+
+:::tip[Lore reads better in short lines]
+The shipped lore is split into one key per line on purpose, with blank lines as spacers. The
+client wraps a long line wherever it likes, which is why `gui.collector.sell.lore-1` and
+`lore-2` exist rather than one long sentence.
+:::
+
+## Keeping configs up to date
+
+When you update the jar, your files are brought up to date on startup rather than left behind or
+overwritten:
+
+| What | Happens |
+|---|---|
+| A setting that is new in this version | Added, with its comments |
+| A value you changed | Left exactly as it is |
+| A setting the plugin no longer uses | Removed |
+| A setting **you** added yourself | Kept |
+| A new button in a menu | Placed into your layout |
+| Comments | Refreshed from the jar, so the documentation stays current |
+
+The plugin can tell its own retired settings from yours because it records which keys it wrote in
+`.managed/`. Anything in your file that it never wrote is yours and is never touched.
+
+For menu files it also merges the character grid, so a button added in an update actually appears
+instead of silently never being drawn. A new character goes into the same cell the shipped layout
+uses, if that cell is a filler in your layout; otherwise into the first decorative cell, searching
+from the bottom row up. It will never write over a content slot — if there is nowhere safe, it logs
+a warning naming the button so you can place it yourself.
+
+:::note[Backups]
+Whenever a file is actually changed, a timestamped copy is written next to it, such as
+`config.yml.backup-2026-10-29-18-30-00`. Nothing is overwritten without one.
+:::

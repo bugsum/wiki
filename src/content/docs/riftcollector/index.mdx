@@ -1,0 +1,87 @@
+---
+title: RiftCollector
+description: Chunk and radius item collectors with counted storage, upgrades, auto sell, auto smelt and filters.
+sidebar:
+  label: Overview
+  order: 1
+---
+
+import { Card, CardGrid, LinkButton, Badge } from '@astrojs/starlight/components';
+import Figure from '../../../components/Figure.astro';
+
+<div class="bl-badges">
+	<Badge text="v1.0.0" variant="note" />
+	<Badge text="Minecraft 1.21.11" variant="default" />
+	<Badge text="Paper" variant="default" />
+	<Badge text="Java 21" variant="default" />
+</div>
+
+RiftCollector turns any block into an item collector that sweeps up everything dropping around it.
+Each collector belongs to the player who placed it, keeps its own storage instead of using the
+block's inventory, and can be upgraded, filtered, and set to sell or smelt what it picks up.
+
+<Figure
+	src="img/riftcollector/collector-menu.svg"
+	alt="The collector menu, showing stored items and the category buttons along the bottom"
+	caption="The collector menu"
+/>
+
+## What it does
+
+<CardGrid>
+	<Card title="Counted storage" icon="database">
+		A slot counts its items rather than stacking them, so one slot can hold a million
+		diamonds. Take 1, take a stack, or fill your inventory in a click.
+	</Card>
+	<Card title="Upgrades" icon="rocket">
+		Pickup speed, pickup range, storage slots and how much fits in one slot, each bought
+		with money through Vault.
+	</Card>
+	<Card title="Auto sell and smelt" icon="analytics">
+		Sell drops the moment they are picked up, or smelt them first. Works with ShopGUI+,
+		EconomyShopGUI, or your own price list with no shop plugin at all.
+	</Card>
+	<Card title="Filters" icon="list-format">
+		Whitelist or blacklist exactly what a collector is allowed to pick up.
+	</Card>
+	<Card title="Owners and trust" icon="approve-check">
+		Only the owner, the players they trust, and staff can open a collector.
+	</Card>
+	<Card title="Holograms" icon="star">
+		Floating text above every collector, drawn with vanilla text displays. No hologram
+		plugin needed.
+	</Card>
+	<Card title="Every menu is a file" icon="document">
+		Layout, items, icons and click actions all live in `gui/`, as a character grid you
+		can rearrange.
+	</Card>
+	<Card title="Translatable" icon="translate">
+		Every line of text sits in `lang/`, in MiniMessage, `&` codes or hex, mixed freely.
+	</Card>
+</CardGrid>
+
+## How a collector works
+
+1. A player places a collector. They become its owner, and only one collector fits in a chunk.
+2. On its own interval it sweeps the area around it, set by the **pickup range** upgrade, either
+   in chunks or in blocks.
+3. Everything it finds runs through the collector's filter, then auto smelt, then auto sell, and
+   whatever is left is stored.
+4. Players open it by right clicking and take items out, or sell the lot from the menu.
+
+:::note[Collectors are not containers]
+A collector keeps its own storage, so the block it is placed as is only a skin. Hoppers,
+droppers and other plugins cannot pull items out of it, and it has to be empty before it can be
+picked back up.
+:::
+
+## Quick start
+
+1. Drop the jar into `/plugins` and start the server.
+2. Run `/collector` to get a collector item.
+3. Place it, right click it, and watch it collect.
+4. Edit `plugins/RiftCollector/config.yml`, then run `/collector reload`.
+
+<LinkButton href="installation/" variant="primary" icon="right-arrow">Installation</LinkButton>
+<LinkButton href="commands/" variant="secondary">Commands & permissions</LinkButton>
+<LinkButton href="configuration/" variant="minimal">Configuration</LinkButton>
