@@ -1,19 +1,17 @@
 ---
 title: Upgrades
 description: Pickup speed, pickup range, storage slots and slot capacity, and how to price them.
-sidebar:
-  order: 4
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 Upgrades belong to the collector, not to the player, and are bought from the collector's own
-Upgrades menu with money through Vault. A collector carries its upgrades with it: pick it up and
-place it again and nothing is lost.
+Upgrades menu. A collector carries its upgrades with it: pick it up and place it again and nothing
+is lost.
 
 :::note
-Without Vault and an economy plugin, upgrade icons say so on their lore and cannot be bought.
-Levels that cost `0` still apply, so a server with no economy simply uses whatever level 0 gives.
+Without an economy plugin, upgrade icons say so on their lore and cannot be bought. Levels that
+cost `0` still apply, so a server with no economy simply uses whatever level 0 gives.
 :::
 
 ## The four upgrades
@@ -144,6 +142,25 @@ stays in the database, out of reach, and a line in the console says which collec
 Raise the number again and it comes back.
 :::
 
+## Paying in another currency
+
+Any level can name the currency it costs, and the storage ladder can have one of its own. The
+currency id comes from [ExcellentEconomy](../integrations/excellenteconomy/); leaving it out uses
+`economy.default-currency`, which is Vault unless you changed it.
+
+```yaml title="config.yml"
+upgrades:
+  slot-capacity:
+    levels:
+      - { value: 10000, cost: 0 }
+      - { value: 100000, cost: 75000 }                     # the default currency
+      - { value: 1000000, cost: 250, currency: gems }      # something rarer
+  slots:
+    currency: tokens     # the whole storage ladder, in tokens
+```
+
+If a currency is not available, the icon says which one is missing rather than failing on click.
+
 ## Per-level permissions
 
 Any level can carry its own permission, on top of the upgrade's permission, to keep the top of a
@@ -170,7 +187,7 @@ Beyond the shared ones, upgrade icons can use:
 | `<upgrade>` | The upgrade's display name from `lang/` |
 | `<level>` `<max-level>` | Current level and the highest one |
 | `<value>` `<next-value>` | What it does now, and after upgrading |
-| `<cost>` | What the next level costs |
+| `<cost>` | What the next level costs, in its own currency |
 | `<reason>` | Why it cannot be bought, when it cannot |
 
 The storage upgrade adds a few, since it is priced per click:

@@ -50,12 +50,26 @@ export default defineConfig({
           },
         },
       },
-      // Each plugin = one sidebar group, filled automatically from its folder.
-      // New plugin? Add a folder under src/content/docs and a group here.
+      // Each plugin = one sidebar group. Pages are listed in the order they should appear;
+      // sub-sections (like Integrations) get their own nested group, filled automatically from
+      // its folder so adding a page there needs no change here.
       sidebar: [
         {
           label: "RiftCollector",
-          items: [{ autogenerate: { directory: "riftcollector" } }],
+          items: [
+            "riftcollector",
+            "riftcollector/installation",
+            "riftcollector/menus",
+            "riftcollector/upgrades",
+            "riftcollector/abilities",
+            "riftcollector/commands",
+            "riftcollector/configuration",
+            {
+              label: "Integrations",
+              items: [{ autogenerate: { directory: "riftcollector/integrations" } }],
+            },
+            "riftcollector/faq",
+          ],
         },
       ],
       lastUpdated: false,

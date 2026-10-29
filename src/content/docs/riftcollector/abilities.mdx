@@ -1,8 +1,6 @@
 ---
 title: Abilities
 description: Auto sell, auto smelt, filters, selling by hand, picking collectors up, trust and holograms.
-sidebar:
-  order: 5
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
@@ -26,36 +24,17 @@ Sells drops the moment they are picked up and pays the collector's owner, even w
 offline. Sold items never take up a slot, so a collector set to sell cobblestone will not fill up
 on it.
 
-Where prices come from, in order:
+Where the prices come from is a separate choice: your own list, ShopGUI+ or EconomyShopGUI, asked
+in the order you set. That, and which money the sale pays out in, is covered in
+[Integrations → Price sources](../integrations/price-sources/).
 
-```yaml title="config.yml"
-collection:
-  price-providers:
-    - CUSTOM             # prices.yml
-    - SHOPGUI_PLUS       # ShopGUI+
-    - ECONOMY_SHOP_GUI   # EconomyShopGUI and EconomyShopGUI+
-```
+An item nothing will price is never sold; it is stored as normal.
 
-The first source with a price for the item wins, and anything not installed is skipped.
+### Stacked drops
 
-### Your own prices
-
-`prices.yml` needs no shop plugin at all. A price is **per single item**, so 64 of something sells
-for 64 times the number:
-
-```yaml title="prices.yml"
-prices:
-  COBBLESTONE: 0.05
-  IRON_INGOT: 4.0
-  DIAMOND: 50.0
-```
-
-Remove an item to let the next source decide, or set it to `0` to make it worthless.
-
-:::note[Payouts go through Vault]
-Whatever a shop plugin prices an item in, the payout is made with Vault. Where a shop item has
-several currencies, the Vault one is used.
-:::
+With [zItemStacker](../integrations/zitemstacker/) installed, a pile of dropped items is one entity
+standing for thousands of them. Collectors read that real count, so the whole pile is collected and
+sold rather than one stack of it.
 
 ## Selling by hand
 

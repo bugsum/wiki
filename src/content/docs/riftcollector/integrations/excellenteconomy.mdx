@@ -1,0 +1,98 @@
+---
+title: ExcellentEconomy
+description: Several currencies, named per price, for upgrades and auto sell payouts.
+sidebar:
+  order: 3
+---
+
+import { Badge, Steps } from '@astrojs/starlight/components';
+
+<div class="bl-badges">
+	<Badge text="Optional" variant="note" />
+	<Badge text="Economy" variant="default" />
+	<Badge text="2.8.0+" variant="default" />
+</div>
+
+[ExcellentEconomy](https://github.com/nulli0n/ExcellentEconomy) holds as many currencies as you
+care to define. With it installed, any price in RiftCollector can say which currency it is in, so
+a collector's upgrades and its payouts need not use the same money.
+
+It was called **CoinsEngine** before version 2.7, and the old name is still recognised on startup.
+
+## Setup
+
+<Steps>
+
+1. Install ExcellentEconomy and define your currencies in its own config.
+
+2. Make sure it is listed first, so it gets asked before Vault:
+
+   ```yaml title="config.yml"
+   economy:
+     providers:
+       - EXCELLENT_ECONOMY
+       - VAULT
+     default-currency: ""
+   ```
+
+3. Name a currency on any price, using the id from ExcellentEconomy:
+
+   ```yaml title="config.yml"
+   upgrades:
+     slot-capacity:
+       levels:
+         - { value: 10000, cost: 0 }
+         - { value: 100000, cost: 75000 }                   # default currency
+         - { value: 1000000, cost: 250, currency: gems }    # something rarer
+     slots:
+       currency: tokens                                     # the whole storage ladder
+   collection:
+     sell-currency: coins                                   # what auto sell pays out
+   ```
+
+4. Restart, and check the console: the hook lists the currencies it found.
+
+</Steps>
+
+## How a currency is chosen
+
+Every price is handed to the first provider that knows the currency it names:
+
+| Price says | Goes to |
+|---|---|
+| `currency: gems` | ExcellentEconomy, if `gems` is one of its currencies |
+| nothing | `economy.default-currency`, or Vault when that is empty |
+| `currency: vault` | Vault |
+
+Setting `default-currency` to one of ExcellentEconomy's ids makes it the money used everywhere a
+price does not say otherwise, which is the simplest way to run the whole plugin on it.
+
+:::caution[A name that does not exist]
+If a price names a currency no provider offers, the upgrade is not sold. The icon says which
+currency is missing, so it is visible rather than silently broken.
+:::
+
+## Offline payouts
+
+Auto sell pays a collector's owner whether or not they are online. ExcellentEconomy only reaches
+offline balances asynchronously, so the payout is handed off and not waited on. If it cannot be
+completed — an unknown player, for instance — a warning naming the amount and the player is
+logged rather than the money quietly vanishing.
+
+## What formats the prices
+
+Amounts shown in the menus are formatted by the currency itself, so a price in gems reads the way
+ExcellentEconomy displays gems, symbol and all.
+
+## Compatibility note
+
+RiftCollector talks to ExcellentEconomy through the API it registers with the server, without
+compiling against it. Its jar ships Java 25 bytecode, and building against that would force
+everyone compiling RiftCollector onto a newer JDK for the sake of one optional hook.
+
+Two things follow from that:
+
+- A server running ExcellentEconomy 2.8.0 needs **Java 25**, because that is its own floor.
+  RiftCollector itself still only needs Java 21.
+- If a future version changes its API, the hook reports that once on startup and stays out of the
+  way, rather than failing every time somebody clicks an upgrade.

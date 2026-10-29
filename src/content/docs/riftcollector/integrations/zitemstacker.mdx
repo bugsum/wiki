@@ -1,0 +1,62 @@
+---
+title: zItemStacker
+description: Collecting stacked piles of drops whole instead of one stack at a time.
+sidebar:
+  order: 5
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+<div class="bl-badges">
+	<Badge text="Optional" variant="note" />
+	<Badge text="Strongly recommended if installed" variant="caution" />
+</div>
+
+[zItemStacker](https://github.com/GroupeZ-dev/zItemStacker) merges dropped items together, so a
+pile on the ground is one entity standing for far more items than a normal stack can hold. Think
+5,000 cobblestone from a mining farm, as a single dropped item.
+
+## Why it matters
+
+A plugin that does not know about the stacker sees only the entity's own stack — 64 at most — and
+then deletes the entity when it picks that up. **The rest of the pile is destroyed.**
+
+With the hook, a collector reads the real count, takes as much as it has room for, and removes
+only that much from the pile:
+
+| | Without the hook | With the hook |
+|---|---|---|
+| A 5,000 pile, collector with room | 64 collected, 4,936 destroyed | 5,000 collected |
+| A 5,000 pile, collector with room for 1,000 | 64 collected, rest destroyed | 1,000 collected, 4,000 left on the ground |
+| Auto sell on | 64 sold | 5,000 sold |
+
+## Setup
+
+Nothing to configure. Install zItemStacker and RiftCollector picks it up on startup:
+
+```text title="console"
+[RiftCollector] Hooked into zItemStacker; stacked drops are collected whole.
+```
+
+If the hook cannot be reached, a warning says so and collectors fall back to one vanilla stack at
+a time, which is safe but wasteful.
+
+## What it changes
+
+- **Collecting** reads the pile's real count rather than the entity's stack size.
+- **Partial pickups** shrink the pile instead of removing it, so what a collector could not fit
+  stays on the ground for a player or another collector.
+- **Filters, auto smelt and auto sell** all see the full amount, so a whole pile is smelted or
+  sold in one go.
+
+## Other stacker plugins
+
+Only zItemStacker is hooked. With a different stacker, a collector sees whatever that plugin puts
+in the entity's own `ItemStack`, which usually means it collects one vanilla stack at a time from
+each pile.
+
+:::caution
+If your stacker also deletes the entity when its stack is taken, the same destruction described
+above can happen. Test with a small pile before running it on a busy server, or add the stacker's
+items to `collection.ignored-materials` so collectors leave them alone.
+:::

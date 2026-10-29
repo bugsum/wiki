@@ -1,0 +1,102 @@
+---
+title: Price sources
+description: Where auto sell gets its prices — your own list, ShopGUI+ or EconomyShopGUI.
+sidebar:
+  order: 4
+---
+
+import { Badge, Tabs, TabItem } from '@astrojs/starlight/components';
+
+<div class="bl-badges">
+	<Badge text="Optional" variant="note" />
+	<Badge text="Selling" variant="default" />
+</div>
+
+Selling needs two separate things: a **price** for the item, and an **economy** to pay the owner
+in. This page is about prices. Payment is [Vault](../vault/) or
+[ExcellentEconomy](../excellenteconomy/).
+
+Prices come from a list of sources, asked in order, and the first one with a price for the item
+wins:
+
+```yaml title="config.yml"
+collection:
+  price-providers:
+    - CUSTOM             # prices.yml, shipped with the plugin
+    - SHOPGUI_PLUS       # ShopGUI+
+    - ECONOMY_SHOP_GUI   # EconomyShopGUI and EconomyShopGUI+
+```
+
+Anything not installed is skipped, so the list is safe to leave exactly as it is. Reorder it to
+decide who wins: put `CUSTOM` first to override your shop for a few items, or last to use it only
+as a fallback.
+
+An item no source prices is never sold. It is stored as normal.
+
+<Tabs>
+	<TabItem label="Your own prices">
+		`prices.yml` needs no shop plugin at all, which makes it the quickest way to get auto
+		sell working on a server that only has Vault.
+
+		A price is **per single item**, so 64 of something sells for 64 times the number:
+
+		```yaml title="prices.yml"
+		prices:
+		  COBBLESTONE: 0.05
+		  IRON_INGOT: 4.0
+		  DIAMOND: 50.0
+		```
+
+		- Remove an item to let the next source decide.
+		- Set it to `0` to make it worthless but still sellable.
+		- Unknown material names are reported on startup and skipped.
+
+		The shipped file covers common drops: ores, ingots, mob drops, crops and logs.
+	</TabItem>
+	<TabItem label="ShopGUI+">
+		Prices come straight from your shop, so a collector sells for exactly what a player would
+		get at the shop itself.
+
+		Install [ShopGUI+](https://www.spigotmc.org/resources/shopgui-1-7-1-21-4-custom-items-support.6515/)
+		and keep `SHOPGUI_PLUS` in the provider list. Nothing else to set up.
+
+		Items that are not in any shop have no price, and fall through to the next source.
+
+		:::note[Offline owners]
+		ShopGUI+ can price an item with or without a player, so a collector whose owner is offline
+		still sells. Prices that depend on a player's permissions use the owner when they are
+		online, and the plain shop price when they are not.
+		:::
+	</TabItem>
+	<TabItem label="EconomyShopGUI">
+		One hook covers both **EconomyShopGUI** and **EconomyShopGUI+** — they share an API, so
+		either edition works with `ECONOMY_SHOP_GUI` in the list.
+
+		Install it and keep the entry; there is nothing to configure on this side.
+
+		:::note[Several currencies in the shop]
+		A shop item can be priced in more than one currency. RiftCollector reads the Vault price,
+		because that is what the payout is made in. Pricing in a non-Vault currency inside your
+		shop will not be reflected here.
+		:::
+	</TabItem>
+</Tabs>
+
+## How a stored stack is priced
+
+A collector slot can hold a million of something, which is far more than any shop will price in
+one call. So a single item is priced and multiplied by the amount.
+
+That means prices are treated as **linear**. If your shop uses dynamic or stock-based pricing that
+changes with quantity, what a collector pays will not match selling the same pile by hand through
+the shop.
+
+## Which money the sale pays out in
+
+```yaml title="config.yml"
+collection:
+  sell-currency: ""     # empty uses economy.default-currency
+```
+
+The price source decides *how much*; `sell-currency` decides *in what*. The two are independent,
+so you can take prices from ShopGUI+ and pay out in an ExcellentEconomy currency.

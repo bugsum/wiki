@@ -3,7 +3,6 @@ title: Commands & Permissions
 description: Every command and permission node in RiftCollector.
 sidebar:
   label: Commands
-  order: 6
 ---
 
 `<required>` · `[optional]`

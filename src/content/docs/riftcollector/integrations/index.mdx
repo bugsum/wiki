@@ -1,0 +1,67 @@
+---
+title: Integrations
+description: Every plugin RiftCollector can work with, and what each one adds.
+sidebar:
+  label: Overview
+  order: 1
+---
+
+import { LinkCard, CardGrid } from '@astrojs/starlight/components';
+
+RiftCollector has no hard dependencies. Everything on this page is optional: install it and the
+matching feature turns on, leave it out and the plugin says so once in the console and carries on
+without it.
+
+| Plugin | Adds | Without it |
+|---|---|---|
+| [Vault](vault/) | Money for upgrades and payouts | Upgrades cannot be bought, auto sell cannot pay |
+| [ExcellentEconomy](excellenteconomy/) | The same, in several currencies | One currency only, through Vault |
+| [ShopGUI+](price-sources/) | Sell prices from your shop | Prices come from `prices.yml` |
+| [EconomyShopGUI / +](price-sources/) | Sell prices from your shop | Prices come from `prices.yml` |
+| [zItemStacker](zitemstacker/) | Collecting stacked drops whole | A pile is collected one stack at a time |
+
+<CardGrid>
+	<LinkCard
+		title="Vault"
+		description="The usual economy bridge. One currency, every economy plugin."
+		href="vault/"
+	/>
+	<LinkCard
+		title="ExcellentEconomy"
+		description="Several currencies, named per price. Upgrades in gems, payouts in coins."
+		href="excellenteconomy/"
+	/>
+	<LinkCard
+		title="Price sources"
+		description="Where auto sell gets its prices: your own list, ShopGUI+ or EconomyShopGUI."
+		href="price-sources/"
+	/>
+	<LinkCard
+		title="zItemStacker"
+		description="Reads the real count behind a stacked pile of drops."
+		href="zitemstacker/"
+	/>
+</CardGrid>
+
+## How hooks behave
+
+Three rules hold for every integration here:
+
+- **Nothing is required.** A missing plugin disables its feature, never the collector.
+- **It is reported once.** On startup each working hook logs a single line, so you can tell from
+  the console what was picked up. A hook that is present but unusable warns instead, with the
+  reason.
+- **The menus explain themselves.** Where a feature cannot be used, the icon in the menu says why
+  on its own lore rather than doing nothing when clicked.
+
+## Load order
+
+Each of these is a soft dependency in `plugin.yml`, so the server loads them before RiftCollector
+and nothing needs reordering by hand:
+
+```yaml title="plugin.yml"
+softdepend: [ Vault, ExcellentEconomy, CoinsEngine, ShopGUI+, EconomyShopGUI, zItemStacker ]
+```
+
+`CoinsEngine` is listed because ExcellentEconomy was called that before version 2.7, and some
+servers still run the jar under the old name.

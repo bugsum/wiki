@@ -1,8 +1,6 @@
 ---
 title: Configuration
 description: Every file and setting RiftCollector generates, and how updates are merged.
-sidebar:
-  order: 7
 ---
 
 import { FileTree, Tabs, TabItem } from '@astrojs/starlight/components';
@@ -90,13 +88,42 @@ database settings, which need a restart.
 		    - CUSTOM
 		    - SHOPGUI_PLUS
 		    - ECONOMY_SHOP_GUI
+		  sell-currency: ""
 		```
 
 		| Option | Type | Default | Description |
 		|---|---|---|---|
 		| `collection.range-type` | `CHUNK` / `RADIUS` | `CHUNK` | How pickup range is measured |
 		| `collection.ignored-materials` | List | `[]` | Items left on the ground server-wide |
-		| `collection.price-providers` | List | all three | Price sources, in the order they are asked |
+		| `collection.price-providers` | List | all three | [Price sources](../integrations/price-sources/), in the order they are asked |
+		| `collection.sell-currency` | Text | empty | Currency payouts are made in. Empty uses the default one |
+	</TabItem>
+	<TabItem label="Economy">
+		```yaml title="config.yml"
+		economy:
+		  providers:
+		    - EXCELLENT_ECONOMY
+		    - VAULT
+		  default-currency: ""
+		```
+
+		| Option | Type | Default | Description |
+		|---|---|---|---|
+		| `economy.providers` | List | both | Economy plugins, in the order they are asked |
+		| `economy.default-currency` | Text | empty | Currency used when a price does not name one |
+
+		Any price in the file may add `currency: <id>` to be charged in something else. How
+		providers and currencies are chosen is explained in
+		[Integrations](../integrations/excellenteconomy/#how-a-currency-is-chosen).
+
+		```yaml title="config.yml"
+		upgrades:
+		  slot-capacity:
+		    levels:
+		      - { value: 1000000, cost: 250, currency: gems }
+		  slots:
+		    currency: ""      # the whole storage ladder, in one currency
+		```
 	</TabItem>
 	<TabItem label="Holograms">
 		```yaml title="config.yml"

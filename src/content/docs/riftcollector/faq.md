@@ -1,8 +1,6 @@
 ---
 title: FAQ
 description: Common questions about RiftCollector.
-sidebar:
-  order: 8
 ---
 
 <details>
@@ -77,6 +75,25 @@ console names the collector it belongs to. Raise the capacity again and it comes
 
 Yes, `item.material` in `config.yml`. Any placeable block works, since the block is only the skin.
 Collectors already placed keep the block they were placed as, and drop as that block.
+
+</details>
+
+<details>
+<summary>I use a stacker plugin and collectors only take 64 at a time</summary>
+
+Install [zItemStacker](https://github.com/GroupeZ-dev/zItemStacker) and RiftCollector reads the real
+stacked count, collecting the whole pile and leaving behind only what it could not take. The console
+says so on startup when the hook is active. Other stacker plugins are not hooked, and with those a
+collector sees only the entity's own stack.
+
+</details>
+
+<details>
+<summary>Can upgrades cost something other than normal money?</summary>
+
+Yes, with ExcellentEconomy. Add `currency: <id>` to an upgrade level, or to `upgrades.slots`, and
+that price is charged in that currency. See
+[Upgrades → Paying in another currency](../upgrades/#paying-in-another-currency).
 
 </details>
 

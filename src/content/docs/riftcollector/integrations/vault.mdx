@@ -1,0 +1,65 @@
+---
+title: Vault
+description: The standard economy bridge, used for upgrade prices and auto sell payouts.
+sidebar:
+  order: 2
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+<div class="bl-badges">
+	<Badge text="Optional" variant="note" />
+	<Badge text="Economy" variant="default" />
+</div>
+
+Vault is the usual way a plugin asks for money without caring which economy plugin is installed.
+RiftCollector uses it for two things:
+
+- **Charging for upgrades**, when a player buys one from the Upgrades menu.
+- **Paying a collector's owner**, when auto sell or the Sell contents button sells something.
+
+## Setup
+
+Install Vault and any economy plugin that registers with it. Nothing else to configure — Vault is
+already in the provider list:
+
+```yaml title="config.yml"
+economy:
+  providers:
+    - EXCELLENT_ECONOMY
+    - VAULT
+  default-currency: ""
+```
+
+With `default-currency` left empty, every price with no currency of its own goes to Vault.
+
+## One currency
+
+Vault exposes exactly one currency, so it answers to the blank currency name and to `vault`. A
+price that names anything else is not Vault's, and is passed to the next provider that knows it —
+see [ExcellentEconomy](../excellenteconomy/) for naming currencies.
+
+```yaml title="config.yml"
+upgrades:
+  slots:
+    currency: ""          # Vault
+    slot:
+      cost-per-slot: 2500
+```
+
+## Offline payouts
+
+A collector keeps working while its owner is away, so payouts go to an offline player. Vault
+handles that directly, through the economy plugin behind it.
+
+## When it is missing
+
+| Where | What you see |
+|---|---|
+| Console, on startup | One line saying no economy plugin was found |
+| Upgrades menu | Icons show the locked form, with "No economy plugin is installed" in the lore |
+| Settings menu | Auto sell cannot be switched on, and says why |
+| Sell contents | The button reports that nothing can be paid out |
+
+Levels that cost `0` still work, so a server with no economy at all can still hand out whatever
+level 0 of each upgrade gives.

@@ -1,8 +1,6 @@
 ---
 title: Installation
 description: Install RiftCollector, pick a database, and connect the optional integrations.
-sidebar:
-  order: 2
 ---
 
 import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
@@ -19,8 +17,12 @@ because the plugin uses Paper's item, display and chat APIs.
 | Paper (or a fork of it) | 1.21.11 | Yes | — |
 | Java | 21+ | Yes | — |
 | Vault + an economy plugin | Latest | Optional | Buying upgrades, paying out auto sell |
+| ExcellentEconomy | 2.8.0+ | Optional | The same, in several currencies |
 | ShopGUI+ | Latest | Optional | Sell prices |
 | EconomyShopGUI or EconomyShopGUI+ | Latest | Optional | Sell prices |
+| zItemStacker | 2.0+ | Optional | Collecting stacked drops whole |
+
+Each optional plugin has its own page under [Integrations](../integrations/).
 
 Everything optional degrades quietly. Without Vault, upgrades and selling are simply unavailable
 and the plugin says so in the console once, on startup.
@@ -94,32 +96,18 @@ storage:
 
 ## Optional integrations
 
-### Vault
+None of these are required. Each one is explained on its own page under
+[Integrations](../integrations/):
 
-Install Vault together with an economy plugin. RiftCollector uses it for two things: charging for
-upgrades, and paying a collector's owner when it sells something. Payments work while the owner is
-offline.
+| Plugin | Adds |
+|---|---|
+| [Vault](../integrations/vault/) | Money for upgrades and payouts |
+| [ExcellentEconomy](../integrations/excellenteconomy/) | The same, in several currencies |
+| [ShopGUI+ / EconomyShopGUI](../integrations/price-sources/) | Sell prices from your shop |
+| [zItemStacker](../integrations/zitemstacker/) | Collecting stacked drops whole |
 
-### Shop plugins
-
-Auto sell asks each price source in turn, in the order you set, and uses the first price it gets:
-
-```yaml title="config.yml"
-collection:
-  price-providers:
-    - CUSTOM             # prices.yml, shipped with the plugin
-    - SHOPGUI_PLUS       # ShopGUI+
-    - ECONOMY_SHOP_GUI   # EconomyShopGUI and EconomyShopGUI+
-```
-
-Anything not installed is skipped, so the list is safe to leave as it is. One hook covers both
-EconomyShopGUI and EconomyShopGUI+. Where a shop prices an item in several currencies, the Vault
-price is the one used, because that is what the payout goes through.
-
-:::tip[No shop plugin?]
-`prices.yml` ships with sensible prices for common drops, so auto sell works on a server with
-nothing but Vault installed. See [Abilities](../abilities/#auto-sell).
-:::
+They are all soft dependencies, so the server loads them first and there is no ordering to do by
+hand. Each working hook logs one line on startup.
 
 ## Updating
 
